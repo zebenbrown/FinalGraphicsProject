@@ -22,7 +22,8 @@ add_library(core STATIC ${CORE_SRC} ${CORE_INC}
         cobb/line.cpp
         cobb/texture2d.cpp
         cobb/geometry.cpp
-        cobb/mesh.cpp)
+        cobb/mesh.cpp
+        cobb/TorusGen.h)
 
 add_custom_target(copyAssetsLine ALL COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${CMAKE_CURRENT_SOURCE_DIR}/cobb/assets/
