@@ -8,9 +8,11 @@ uniform mat4 view;
 uniform mat4 projection;
 
 uniform vec3 offset;
+uniform vec3 scale;
 
 void main()
 {
-    gl_Position =view * modelMatrix * vec4(aPosition.x + offset.x, aPosition.y, aPosition.z, 1.0f);
+    vec3 scaledPosition = (aPosition * scale) + offset;
+    gl_Position =view * modelMatrix * vec4(scaledPosition, 1.0f);
 
 }

@@ -114,7 +114,9 @@ int main() {
 
         torusShader.setMat4("modelMatrix", torusModel);
         torusShader.setMat4("view", viewProj);
-        torus.draw();
+        //torus.draw();
+
+       torus.draw();
 
 		skyShader.use();
 		glActiveTexture(GL_TEXTURE0);
