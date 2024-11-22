@@ -9,7 +9,10 @@
 #include <glm/glm.hpp>
 
 #include "cobb/camera.hpp"
+#include "cobb/geometry.hpp"
 #include "cobb/line.hpp"
+#include "cobb/mesh.hpp"
+#include "cobb/texture2d.hpp"
 
 const int SCREEN_WIDTH = 1080;
 const int SCREEN_HEIGHT = 720;
@@ -81,6 +84,17 @@ int main() {
 	Line::loadShader();
 
 
+	Shader skyShader = Shader("assets/sphere");
+	skyShader.use();
+	skyShader.setInt("sphereMapTex", 0);
+	Texture2d skyTexture = Texture2d("assets/skysphere.png");
+
+	MeshData sphereMeshData;
+	createSphere(1.0f, 1024, &sphereMeshData);
+	auto sphereMesh = ProceduralMesh(sphereMeshData);
+
+	mat4 model = Object::scale(100, 100, 100);
+
 	
 	//Render loop
 	while (!glfwWindowShouldClose(window.window)) {
@@ -89,6 +103,15 @@ int main() {
 		float time = window.getTime();
 		camera.update(window.window, deltaTime);
 		mat4 viewProj = camera.proj * camera.view;
+
+
+		skyShader.use();
+		glActiveTexture(GL_TEXTURE0);
+		skyTexture.bind();
+		skyShader.setMat4("viewProj", viewProj);
+		skyShader.setMat4("model", model);
+		sphereMesh.draw();
+
 
 		drawAxisGizmo();
 
