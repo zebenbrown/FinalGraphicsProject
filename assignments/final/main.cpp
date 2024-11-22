@@ -13,6 +13,7 @@
 #include "cobb/line.hpp"
 #include "cobb/mesh.hpp"
 #include "cobb/texture2d.hpp"
+#include "cobb/TorusGen.h"
 
 const int SCREEN_WIDTH = 1080;
 const int SCREEN_HEIGHT = 720;
@@ -83,7 +84,8 @@ int main() {
 	camera = Camera(vec3(0.5f, 12.0f, 31.3f), vec3(0, 0, -450.0f), 60.0f, vec2(Window::SCREEN_WIDTH, Window::SCREEN_HEIGHT));
 	Line::loadShader();
 
-
+    Shader torusShader = Shader("assets/torus");
+    TorusGen torus(0.05f, 1.0f, 200, 200);
 	Shader skyShader = Shader("assets/sphere");
 	skyShader.use();
 	skyShader.setInt("sphereMapTex", 0);
@@ -105,6 +107,11 @@ int main() {
 		mat4 viewProj = camera.proj * camera.view;
 
 
+        torusShader.use();
+        torusShader.setMat4("modelMatrix", model);
+        torusShader.setMat4("view", viewProj);
+        torus.draw();
+
 		skyShader.use();
 		glActiveTexture(GL_TEXTURE0);
 		skyTexture.bind();
@@ -113,7 +120,10 @@ int main() {
 		sphereMesh.draw();
 
 
+
 		drawAxisGizmo();
+
+
 
 		glfwSwapBuffers(window.window);
 	}

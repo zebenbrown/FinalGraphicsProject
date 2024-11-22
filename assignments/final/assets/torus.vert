@@ -11,6 +11,6 @@ uniform vec3 offset;
 
 void main()
 {
-    gl_Position = projection * view * modelMatrix * vec4(aPosition.x + offset.x, aPosition.y, aPosition.z, 1.0f);
+    gl_Position =view * modelMatrix * vec4(aPosition.x + offset.x, aPosition.y, aPosition.z, 1.0f);
 
 }
