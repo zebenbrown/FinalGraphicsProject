@@ -85,7 +85,7 @@ int main() {
 	Line::loadShader();
 
     Shader torusShader = Shader("assets/torus");
-    TorusGen torus(0.05f, 1.0f, 200, 200);
+    TorusGen torus(0.01f, 1.0f, 200, 200);
 	Shader skyShader = Shader("assets/sphere");
 	skyShader.use();
 	skyShader.setInt("sphereMapTex", 0);
@@ -106,9 +106,13 @@ int main() {
 		camera.update(window.window, deltaTime);
 		mat4 viewProj = camera.proj * camera.view;
 
-
+        mat4 torusModel = model;
         torusShader.use();
-        torusShader.setMat4("modelMatrix", model);
+
+        torusModel = glm::rotate(torusModel, 90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
+        torusModel = glm::scale(torusModel, glm::vec3(0.2f));
+
+        torusShader.setMat4("modelMatrix", torusModel);
         torusShader.setMat4("view", viewProj);
         torus.draw();
 
