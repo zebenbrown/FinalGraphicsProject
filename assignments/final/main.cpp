@@ -114,14 +114,12 @@ int main() {
 
         torusShader.setMat4("modelMatrix", torusModel);
         torusShader.setMat4("view", viewProj);
-        //torus.draw();
 
         for (int i = 5; i > 0; --i)
         {
             torusShader.setVec3("offset", glm::vec3(i - (i * 0.8)));
             torus.draw();
         }
-       torus.draw();
 
 		skyShader.use();
 		glActiveTexture(GL_TEXTURE0);
