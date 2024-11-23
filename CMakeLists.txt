@@ -22,6 +22,7 @@ include(external/glfw.cmake)
 include(external/imgui.cmake)
 include(external/glm.cmake)
 include(external/assimp.cmake)
+include(external/freetype.cmake)
 
 # Disable treating warnings as errors for Assimp specifically
 # This allows it to run on CLion

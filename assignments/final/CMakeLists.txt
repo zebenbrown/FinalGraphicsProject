@@ -19,5 +19,7 @@ add_executable(assignment1 ${ASSIGNMENT1_SRC} ${ASSIGNMENT1_INC})
 target_link_libraries(assignment1 PUBLIC core IMGUI glm)
 target_include_directories(assignment1 PUBLIC ${CORE_INC_DIR} ${stb_INCLUDE_DIR})
 
+target_link_libraries(assignment1 PUBLIC freetype)
+
 #Trigger asset copy when assignment1 is built
 add_dependencies(assignment1 copyAssetsA1)

@@ -23,7 +23,8 @@ add_library(core STATIC ${CORE_SRC} ${CORE_INC}
         cobb/texture2d.cpp
         cobb/geometry.cpp
         cobb/mesh.cpp
-        cobb/TorusGen.h)
+        cobb/TorusGen.h
+        cobb/textRendering.h)
 
 add_custom_target(copyAssetsLine ALL COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${CMAKE_CURRENT_SOURCE_DIR}/cobb/assets/
@@ -32,6 +33,7 @@ add_custom_target(copyAssetsLine ALL COMMAND ${CMAKE_COMMAND} -E copy_directory
 find_package(OpenGL REQUIRED)
 
 target_link_libraries(core PUBLIC IMGUI glm assimp)
+target_link_libraries(core PUBLIC freetype)
 
 install (TARGETS core DESTINATION lib)
 install (FILES ${CORE_INC} DESTINATION include/core)
