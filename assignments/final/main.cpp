@@ -86,6 +86,7 @@ int main() {
 	Line::loadShader();
 
     Shader torusShader = Shader("assets/torus");
+    Shader textRenderingShader = Shader("assets/textRendering");
     TorusGen torus(0.01f, 1.0f, 200, 200);
 
     textRendering textRendering;
@@ -138,7 +139,7 @@ int main() {
 		drawAxisGizmo();
 
 
-        RenderText(, "This is sample text", 25.0f, 25.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
+        textRendering.RenderText(textRenderingShader, "This is sample text", 25.0f, 25.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
 
 		glfwSwapBuffers(window.window);
 	}

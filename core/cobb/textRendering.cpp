@@ -66,7 +66,7 @@ void textRendering::loadText(std::string fontPath)
     }
 }
 
-void textRendering::loadText(cobb::Shader &shader, std::string text, float x, float y, float z, float scale, glm::vec3 color)
+void textRendering::RenderText(cobb::Shader &shader, std::string text, float x, float y, float scale, glm::vec3 color)
 {
     shader.use();
     glUniform3f(glGetUniformLocation(shader.ID, "textColor"), color.x, color.y, color.z);

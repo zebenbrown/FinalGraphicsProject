@@ -40,7 +40,7 @@ public:
         glBindVertexArray(0);
     }
 
-    void loadText(Shader &shader, std::string text, float x, float y, float z, float scale, glm::vec3 color);
+    void RenderText(cobb::Shader &shader, std::string text, float x, float y, float scale, glm::vec3 color);
 
     FT_Library ft;
     FT_Face face;
