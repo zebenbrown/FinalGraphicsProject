@@ -14,6 +14,7 @@
 #include "cobb/mesh.hpp"
 #include "cobb/texture2d.hpp"
 #include "cobb/TorusGen.h"
+#include "cobb/textRendering.h"
 
 const int SCREEN_WIDTH = 1080;
 const int SCREEN_HEIGHT = 720;

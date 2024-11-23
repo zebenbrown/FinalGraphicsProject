@@ -25,6 +25,19 @@ public:
         unsigned int Advance; //Horizontal offset to advance to next glyph
     };
 
+    textRendering()
+    {
+        glGenVertexArrays(1, &textVAO);
+        glGenBuffers(1, &textVBO);
+        glBindVertexArray(textVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, textVBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, NULL, GL_DYNAMIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 4, 0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindVertexArray(0);
+    }
+
     FT_Library ft;
     FT_Face face;
     std::map<GLchar, Character> characterMap;
@@ -36,6 +49,9 @@ public:
         FT_Done_Face(face);
         FT_Done_FreeType(ft);
     }
+
+private:
+    unsigned int textVAO, textVBO;
 
 #endif //ITMG_FINAL_TEXTRENDERING_H
 };

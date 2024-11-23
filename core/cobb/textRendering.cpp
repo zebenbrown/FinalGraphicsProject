@@ -4,6 +4,7 @@
 
 #include "textRendering.h"
 
+
 void textRendering::loadText(std::string fontPath)
 {
     if (FT_Init_FreeType(&ft))
@@ -59,6 +60,7 @@ void textRendering::loadText(std::string fontPath)
                     };
             characterMap.insert(std::pair<char, Character>(c, character));
         }
+        glBindVertexArray(0);
         glBindTexture(GL_TEXTURE_2D, 0);
     }
 }
