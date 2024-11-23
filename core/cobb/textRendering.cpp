@@ -3,6 +3,7 @@
 //
 
 #include "textRendering.h"
+#include "shader.hpp"
 
 
 void textRendering::loadText(std::string fontPath)
@@ -63,4 +64,51 @@ void textRendering::loadText(std::string fontPath)
         glBindVertexArray(0);
         glBindTexture(GL_TEXTURE_2D, 0);
     }
+}
+
+void textRendering::loadText(cobb::Shader &shader, std::string text, float x, float y, float z, float scale, glm::vec3 color)
+{
+    shader.use();
+    glUniform3f(glGetUniformLocation(shader.ID, "textColor"), color.x, color.y, color.z);
+    glActiveTexture(GL_TEXTURE0);
+    glBindVertexArray(textVAO);
+
+    //iterate through all characters
+    std::string::const_iterator character;
+    for (character = text.begin(); character != text.end(); character++)
+    {
+        Character ch = characterMap[*character];
+
+        float xPos = x + ch.Bearing.x * scale;
+        float yPos = y - (ch.Size.y - ch.Bearing.y) * scale;
+
+        float width = ch.Size.x * scale;
+        float height = ch.Size.y * scale;
+
+        float vertices[6][4] =
+                {
+                xPos, yPos + height, 0.0f, 0.0f,
+                xPos, yPos, 0.0f, 1.0f,
+                xPos + width, yPos, 1.0f, 1.0f,
+
+                xPos, yPos + height, 0.0f, 0.0f,
+                xPos + width, yPos, 1.0f, 1.0f,
+                xPos + width, yPos + height, 1.0f, 0.0f
+                };
+
+        //render glyph texture over quad
+        glBindTexture(GL_TEXTURE_2D, ch.textureID);
+        //update content of VBO memory
+        glBindBuffer(GL_ARRAY_BUFFER, textVBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices); //need to use subdata instead of data
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+        //render quad
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+
+        //advance cursors for next quad
+        x += (ch.Advance >> 6) * scale; //bitshift by six to get value in pixels (2^6 = 64 (divide amount by 1/64th pixels by 64 to get the amount of pixels)
+    }
+    glBindVertexArray(0);
+    glBindTexture(GL_TEXTURE_2D, 0);
 }

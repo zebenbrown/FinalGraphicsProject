@@ -10,6 +10,7 @@
 #include FT_FREETYPE_H
 
 #include "../ew/external/glad.h"
+#include "shader.hpp"
 #include <glm/glm.hpp>
 #include <iostream>
 #include <map>
@@ -27,6 +28,7 @@ public:
 
     textRendering()
     {
+        //configure vao and vbo
         glGenVertexArrays(1, &textVAO);
         glGenBuffers(1, &textVBO);
         glBindVertexArray(textVAO);
@@ -37,6 +39,8 @@ public:
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindVertexArray(0);
     }
+
+    void loadText(Shader &shader, std::string text, float x, float y, float z, float scale, glm::vec3 color);
 
     FT_Library ft;
     FT_Face face;

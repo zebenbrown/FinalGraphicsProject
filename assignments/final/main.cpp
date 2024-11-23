@@ -87,6 +87,10 @@ int main() {
 
     Shader torusShader = Shader("assets/torus");
     TorusGen torus(0.01f, 1.0f, 200, 200);
+
+    textRendering textRendering;
+
+    textRendering.loadText("assets/super-mario-256.ttf");
 	Shader skyShader = Shader("assets/sphere");
 	skyShader.use();
 	skyShader.setInt("sphereMapTex", 0);
@@ -134,6 +138,7 @@ int main() {
 		drawAxisGizmo();
 
 
+        RenderText(, "This is sample text", 25.0f, 25.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
 
 		glfwSwapBuffers(window.window);
 	}
