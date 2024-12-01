@@ -7,6 +7,7 @@
 #include <ew/ewMath/ewMath.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include "cobb/camera.hpp"
 #include "cobb/geometry.hpp"
@@ -139,7 +140,12 @@ int main() {
 		drawAxisGizmo();
 
 
-        textRendering.RenderText(textRenderingShader, "This is sample text", 25.0f, 25.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
+        std::string sampleText = "Mario Galaxy Map";
+        mat4 textProjection = glm::ortho(0.0f, static_cast<float>(Window::SCREEN_WIDTH), 0.0f, static_cast<float>(Window::SCREEN_HEIGHT));
+        textRenderingShader.use();
+        textRenderingShader.setMat4("projection", textProjection);
+        textRenderingShader.setVec3("textColor", glm::vec3(1.0f, 0.0f, 0.0f));
+        textRendering.RenderText(textRenderingShader, sampleText, 5.0f, 1030.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
 
 		glfwSwapBuffers(window.window);
 	}
