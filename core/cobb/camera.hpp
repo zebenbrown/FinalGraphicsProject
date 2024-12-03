@@ -24,6 +24,7 @@ public:
     mat4 view;
     mat4 proj;
     bool lock;
+    bool disable;
     bool ui;
     float FOV;
 

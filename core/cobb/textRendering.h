@@ -42,6 +42,9 @@ public:
 
     void RenderText(cobb::Shader &shader, std::string text, float x, float y, float scale, glm::vec3 color);
 
+    float getWidth(string text, float scale);
+    float getHeight(float scale);
+
     FT_Library ft;
     FT_Face face;
     std::map<GLchar, Character> characterMap;

@@ -32,6 +32,8 @@ cobb::Window::Window(const string& title) {
     }
     glfwSwapInterval(0);
     glClearColor(0.0f, 0.1f, 0.2f, 1.0f);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_DEPTH_TEST);
 }
 

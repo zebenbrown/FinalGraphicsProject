@@ -92,7 +92,7 @@ void Camera::handleMouse(double xPos, double yPos) {
     lastY = static_cast<float>(yPos);
 
 
-    if(!lock) {
+    if(!lock && !disable) {
         const float sensitivity = 0.1f;
         xOff *= sensitivity;
         yOff *= sensitivity;
@@ -135,6 +135,7 @@ void Camera::load(vec3 pos, vec3 rot, float fov, vec2 screenDims) {
     forward = vec3(0, 0, -1);
     view = mat4(1);
     lock = false;
+    disable = false;
     FOV = fov;
     proj = mat4(1);
     proj = perspective(radians(fov), (float) Window::SCREEN_WIDTH / (float) Window::SCREEN_HEIGHT, 0.1f, 1000.0f);

@@ -4,6 +4,7 @@
 
 #include "textRendering.h"
 #include "shader.hpp"
+#include "window.hpp"
 
 
 void textRendering::loadText(std::string fontPath)
@@ -80,11 +81,10 @@ void textRendering::RenderText(cobb::Shader &shader, std::string text, float x, 
         Character ch = characterMap[*character];
 
         float xPos = x + ch.Bearing.x * scale;
-        float yPos = y - (ch.Size.y - ch.Bearing.y) * scale;
+        float yPos = (cobb::Window::SCREEN_HEIGHT - y) - ch.Bearing.y;//- (ch.Size.y - ch.Bearing.y) * scale;
 
         float width = ch.Size.x * scale;
         float height = ch.Size.y * scale;
-
         float vertices[6][4] =
                 {
                 xPos, yPos + height, 0.0f, 0.0f,
@@ -111,4 +111,30 @@ void textRendering::RenderText(cobb::Shader &shader, std::string text, float x, 
     }
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+float textRendering::getWidth(string text, float scale)
+{
+    float totalWidth = 0.0f;
+    //iterate through all characters
+    std::string::const_iterator character;
+    for (character = text.begin(); character != text.end(); character++) {
+        Character ch = characterMap[*character];
+        totalWidth+= ch.Size.x;
+    }
+    return totalWidth * scale;
+}
+
+float textRendering::getHeight(float scale)
+{
+    string text = "ABCDEFGHIJKLMNOPQRSTUVWXYZ ";
+    float maxHeight = 0.0f;
+    std::string::const_iterator character;
+    for (character = text.begin(); character != text.end(); character++) {
+        Character ch = characterMap[*character];
+        if(ch.Size.y > maxHeight) {
+            maxHeight = ch.Size.y;
+        }
+    }
+    return maxHeight * scale;
 }

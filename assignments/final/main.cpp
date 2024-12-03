@@ -16,6 +16,7 @@
 #include "cobb/texture2d.hpp"
 #include "cobb/TorusGen.h"
 #include "cobb/textRendering.h"
+#include "cobb/spriteRendering.h"
 
 const int SCREEN_WIDTH = 1080;
 const int SCREEN_HEIGHT = 720;
@@ -53,6 +54,7 @@ void drawAxisGizmo() {
 float startTime = -1.0f;
 auto startPosRot = Camera::loadString("[0, 0, 0, 0, 0, 0]");
 auto endPosRot = Camera::loadString("[0, 0, 0, 0, 0, 0]");
+vec2 mousePos = vec2(0);
 
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 	camera.handleKeyboard(key, action);
@@ -75,6 +77,8 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 
 void mouse_position_callback(GLFWwindow *window, double xpos, double ypos) {
 	camera.handleMouse(xpos, ypos);
+    mousePos.x = xpos;
+    mousePos.y = ypos;
 }
 
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
@@ -88,6 +92,7 @@ int main() {
 	glfwSetCursorPosCallback(window.window, mouse_position_callback);
 	glfwSetScrollCallback(window.window, scroll_callback);
 	camera = Camera(vec3(0.5f, 12.0f, 31.3f), vec3(0, 0, -450.0f), 60.0f, vec2(Window::SCREEN_WIDTH, Window::SCREEN_HEIGHT));
+    camera.disable = true;
 	Line::loadShader();
 
     Shader torusShader = Shader("assets/torus");
@@ -95,8 +100,15 @@ int main() {
     TorusGen torus(0.01f, 1.0f, 200, 200);
 
     textRendering textRendering;
-
     textRendering.loadText("assets/super-mario-256.ttf");
+
+    Shader hudElementShader = Shader("assets/hudElement");
+    hudElementShader.use();
+    SpriteRenderer spriteRenderer = SpriteRenderer(hudElementShader);
+    hudElementShader.setInt("tex", 0);
+    Texture2d wiiPointer = Texture2d("assets/wii-pointer.png");
+
+
 	Shader skyShader = Shader("assets/sphere");
 	skyShader.use();
 	skyShader.setInt("sphereMapTex", 0);
@@ -131,7 +143,7 @@ int main() {
 
         for (int i = 5; i > 0; --i)
         {
-            torusShader.setVec3("offset", glm::vec3(i - (i * 0.8)));
+            torusShader.setVec3("offset", glm::vec3(i - (i * 0.8f)));
             torus.draw();
         }
 
@@ -158,15 +170,79 @@ int main() {
 
 		drawAxisGizmo();
 
-
-        std::string sampleText = "Mario Galaxy Map";
-        mat4 textProjection = glm::ortho(0.0f, static_cast<float>(Window::SCREEN_WIDTH), 0.0f, static_cast<float>(Window::SCREEN_HEIGHT));
+        glDisable(GL_DEPTH_TEST);
+        mat4 textProjection = ortho(0.0f, static_cast<float>(Window::SCREEN_WIDTH), 0.0f, static_cast<float>(Window::SCREEN_HEIGHT), -1.0f, 1.0f);
         textRenderingShader.use();
         textRenderingShader.setMat4("projection", textProjection);
         
         vec3 textColor = vec3(1, 0, 0);
         textRenderingShader.setVec3("textColor", textColor);
-        textRendering.RenderText(textRenderingShader, sampleText, 5.0f, 1030.0f, 1.0f, textColor);
+
+        //this is almost entirely unnecessary but I thought it was cool lol (makes text fade to a different scale based on how close your cursor is)
+        float x = 80.0f, y = 30.0f, scale = 1.0f, scaleHover = 1.25f, hoverDist = 50.0f;
+        float width = textRendering.getWidth("Mario Galaxy Map", scale);
+        float height = textRendering.getHeight(scale);
+        if(mousePos.x >= x - hoverDist && mousePos.y >= y - hoverDist && mousePos.x < x + hoverDist + width && mousePos.y < y + hoverDist + height) {
+            //if its entirely inside the text area (aka no need for calculating how far from the text are it is)
+            if(mousePos.x >= x && mousePos.y >= y && mousePos.x < x + width && mousePos.y < y + height) {
+                float offsetMult = (scaleHover - scale) * 0.5f;
+                scale = scaleHover;
+                x -= width * offsetMult;
+                y += height * offsetMult;
+            } else {
+                float dist = hoverDist;
+                //these 4 if statements calculate how far the cursor is from the closest edge
+                if(mousePos.x < x) {
+                    float temp = x - mousePos.x;
+                    if(temp < dist) dist = temp;
+                }
+                if(mousePos.x >= x + width) {
+                    float temp = mousePos.x - (x + width);
+                    if(temp < dist) dist = temp;
+                }
+                if(mousePos.y < y) {
+                    float temp = y - mousePos.y;
+                    if(temp < dist) dist = temp;
+                }
+                if(mousePos.y >= y + height) {
+                    float temp = mousePos.y - (y + height);
+                    if(temp < dist) dist = temp;
+                }
+
+                //invert it
+                dist = hoverDist - dist;
+                //scale down to 0-1 range
+                dist /= hoverDist;
+                //lerp between the two scales
+                float lerpScale = (scale * (1.0f - dist)) + (scaleHover * dist);
+                //calculate how much to shift xy by so it remains centered at same point
+                float offsetMult = (lerpScale - scale) * 0.5f;
+                scale = lerpScale;
+                x -= width * offsetMult;
+                y += height * offsetMult;
+            }
+
+        }
+        textRendering.RenderText(textRenderingShader, "Mario Galaxy Map", x, y, scale, textColor);
+
+        if(!camera.lock) {
+            glBindVertexArray(*Texture2d::getVAO());
+            hudElementShader.use();
+            hudElementShader.setMat4("projection", textProjection);
+            float pointerScale = 0.1f;
+            hudElementShader.setMat4("model", Object::translate(mousePos.x + wiiPointer.getWidth() * pointerScale * 0.5f, Window::SCREEN_HEIGHT - mousePos.y - wiiPointer.getHeight() * pointerScale, 0) * Object::scale(wiiPointer.getWidth() * pointerScale, wiiPointer.getHeight() * pointerScale, 1));
+            glActiveTexture(GL_TEXTURE0);
+            wiiPointer.bind();
+            wiiPointer.draw();
+        }
+
+        glEnable(GL_DEPTH_TEST);
+        //hudElementShader.setMat4("projection", textProjection);
+        //spriteRenderer.DrawSprite(wiiPointer, vec2(200), vec2(300, 400), 45, vec3(0, 1, 0));
+
+
+
+
 
 		glfwSwapBuffers(window.window);
 	}
