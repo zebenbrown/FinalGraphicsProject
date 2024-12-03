@@ -51,8 +51,8 @@ void drawAxisGizmo() {
 }
 
 float startTime = -1.0f;
-pair startPosRot = Camera::loadString("[0, 0, 0, 0, 0, 0]");
-pair endPosRot = Camera::loadString("[0, 0, 0, 0, 0, 0]");
+auto startPosRot = Camera::loadString("[0, 0, 0, 0, 0, 0]");
+auto endPosRot = Camera::loadString("[0, 0, 0, 0, 0, 0]");
 
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 	camera.handleKeyboard(key, action);
