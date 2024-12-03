@@ -40,6 +40,13 @@ public:
     void handleKeyboard(int key, int action);
     void handleScroll(double yOff);
 
+    void setPosRot(pair<vec3, vec3> posRot);
+    string getString();
+
+    void lerpCamera(float startTime, float currentTime, float duration, pair<vec3, vec3> startPosRot, pair<vec3, vec3> endPosRot);
+
+    static pair<vec3, vec3> loadString(const char input[]);
+
 private:
     float lastX, lastY;
     bool firstMouse;

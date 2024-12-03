@@ -10,8 +10,8 @@ Object::Object() {
 
 Object::Object(vec3 pos, vec3 rot, vec3 sca) {
     exists = true;
-    _position = pos;
-    _rotation = rot;
+    pos = pos;
+    rot = rot;
     _scale = sca;
 }
 

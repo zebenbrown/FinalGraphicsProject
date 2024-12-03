@@ -32,7 +32,7 @@ void drawAxisGizmo() {
 		//higher number = less stuttering, can't be above ~950 because depth will start cutting it off, 900 to be safe
 		const float compassScale = 900.0f;
 
-		vec3 p = camera.forward * vec3(compassScale) + camera._position;
+		vec3 p = camera.forward * vec3(compassScale) + camera.pos;
 
 		Line xAxis = Line(p, p + vec3(0.05f * compassScale, 0, 0), vec4(1, 0, 0, 1));
 		Line yAxis = Line(p, p + vec3(0, 0.05f * compassScale, 0), vec4(0, 1, 0, 1)); //up
@@ -50,22 +50,26 @@ void drawAxisGizmo() {
 	}
 }
 
+float startTime = -1.0f;
+pair startPosRot = Camera::loadString("[0, 0, 0, 0, 0, 0]");
+pair endPosRot = Camera::loadString("[0, 0, 0, 0, 0, 0]");
+
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 	camera.handleKeyboard(key, action);
-	if (action == GLFW_PRESS)
-	{
-		if (key == GLFW_KEY_ESCAPE)
-		{
-			if (camera.lock)
-			{
+	if (action == GLFW_PRESS) {
+		if (key == GLFW_KEY_ESCAPE) {
+			if (camera.lock) {
 				glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 				glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-			} else
-			{
+			} else {
 				glClearColor(0.0f, 0.1f, 0.2f, 1.0f);
 				glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 			}
-		}
+		} else if(key == GLFW_KEY_P) {
+            cout << camera.getString() << endl;
+        } else if(key == GLFW_KEY_L) {
+            startTime = static_cast<float>(glfwGetTime());
+        }
 	}
 }
 
@@ -104,7 +108,10 @@ int main() {
 
 	mat4 model = Object::scale(100, 100, 100);
 
-	
+    //set start/end position/rotation here
+    startPosRot = Camera::loadString("[0.025197, 12.000000, 34.181889, 0.000000, -19.500004, -440.999451]");
+    endPosRot = Camera::loadString("[-24.538515, 29.393368, -15.470002, 0.000000, -43.699879, -340.496185]");
+
 	//Render loop
 	while (!glfwWindowShouldClose(window.window)) {
 		glfwPollEvents();
@@ -136,6 +143,18 @@ int main() {
 		sphereMesh.draw();
 
 
+        //Camera movement (press 'P' to record a position/rotation)
+        //Copy paste the string into the one using the "Camera::loadString()" function to set a position/rotation
+        //Press 'L' to activate the camera movement
+        // duration is how fast the camera will move
+        if(startTime != -1.0f) {
+            float duration = 1.0f;
+            camera.lerpCamera(startTime, time, duration, startPosRot, endPosRot);
+            if(time - startTime > duration) {
+                startTime = -1.0f;
+            }
+        }
+
 
 		drawAxisGizmo();
 
@@ -144,8 +163,10 @@ int main() {
         mat4 textProjection = glm::ortho(0.0f, static_cast<float>(Window::SCREEN_WIDTH), 0.0f, static_cast<float>(Window::SCREEN_HEIGHT));
         textRenderingShader.use();
         textRenderingShader.setMat4("projection", textProjection);
-        textRenderingShader.setVec3("textColor", glm::vec3(1.0f, 0.0f, 0.0f));
-        textRendering.RenderText(textRenderingShader, sampleText, 5.0f, 1030.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+        
+        vec3 textColor = vec3(1, 0, 0);
+        textRenderingShader.setVec3("textColor", textColor);
+        textRendering.RenderText(textRenderingShader, sampleText, 5.0f, 1030.0f, 1.0f, textColor);
 
 		glfwSwapBuffers(window.window);
 	}

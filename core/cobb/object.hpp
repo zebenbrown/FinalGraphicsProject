@@ -18,8 +18,8 @@ using namespace glm;
 class Object
 {
 public:
-    vec3 _position = vec3(0, 0, 0);
-    vec3 _rotation = vec3(0, 0, 0);
+    vec3 pos = vec3(0, 0, 0);
+    vec3 rot = vec3(0, 0, 0);
     vec3 _scale = vec3(1, 1, 1);
     bool exists = false;
 
