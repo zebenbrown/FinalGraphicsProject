@@ -13,6 +13,6 @@ uniform vec3 scale;
 void main()
 {
     vec3 scaledPosition = (aPosition * offset);
-    gl_Position =view * modelMatrix * vec4(scaledPosition, 1.0f);
+    gl_Position = view * modelMatrix * vec4(scaledPosition, 1.0f);
 
 }

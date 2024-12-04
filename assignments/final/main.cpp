@@ -92,12 +92,14 @@ int main() {
 	glfwSetCursorPosCallback(window.window, mouse_position_callback);
 	glfwSetScrollCallback(window.window, scroll_callback);
 	camera = Camera(vec3(0.5f, 12.0f, 31.3f), vec3(0, 0, -450.0f), 60.0f, vec2(Window::SCREEN_WIDTH, Window::SCREEN_HEIGHT));
+    camera.setPosRot(Camera::loadString("[-19.075241, 9.822771, 25.880850, 0.000000, -23.500034, -416.899048]"));
+    //set this to false if you want regular camera WASD flight
     camera.disable = true;
 	Line::loadShader();
 
     Shader torusShader = Shader("assets/torus");
     Shader textRenderingShader = Shader("assets/textRendering");
-    TorusGen torus(0.01f, 1.0f, 200, 200);
+    TorusGen torus = TorusGen(0.01f, 1.0f, 200, 200);
 
     textRendering textRendering;
     textRendering.loadText("assets/super-mario-256.ttf");
@@ -118,6 +120,10 @@ int main() {
 	createSphere(1.0f, 1024, &sphereMeshData);
 	auto sphereMesh = ProceduralMesh(sphereMeshData);
 
+    MeshData world1;
+    createSphere(1.0f, 1024, &world1);
+    auto world1Mesh = ProceduralMesh(world1);
+
 	mat4 model = Object::scale(100, 100, 100);
 
     //set start/end position/rotation here
@@ -132,27 +138,48 @@ int main() {
 		camera.update(window.window, deltaTime);
 		mat4 viewProj = camera.proj * camera.view;
 
-        mat4 torusModel = model;
-        torusShader.use();
 
-        torusModel = glm::rotate(torusModel, 90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
-        torusModel = glm::scale(torusModel, glm::vec3(0.2f));
+        //skybox/spheremap
+        skyShader.use();
+        glActiveTexture(GL_TEXTURE0);
+        skyTexture.bind();
+        skyShader.setMat4("viewProj", viewProj);
+        skyShader.setMat4("model", model);
+        sphereMesh.draw();
+
+
+        //rings
+        mat4 torusModel = model; //scale of 100
+        torusShader.use();
+        torusModel = glm::rotate(torusModel, radians(120.0f), vec3(1.0f, 0.0f, 0.0f));
+        torusModel = scale(torusModel, vec3(0.2f)); //scales down to 20
 
         torusShader.setMat4("modelMatrix", torusModel);
         torusShader.setMat4("view", viewProj);
 
         for (int i = 5; i > 0; --i)
         {
-            torusShader.setVec3("offset", glm::vec3(i - (i * 0.8f)));
+            torusShader.setVec3("offset", vec3(i - (i * 0.8f)));
             torus.draw();
         }
 
-		skyShader.use();
-		glActiveTexture(GL_TEXTURE0);
-		skyTexture.bind();
-		skyShader.setMat4("viewProj", viewProj);
-		skyShader.setMat4("model", model);
-		sphereMesh.draw();
+
+        skyShader.use();
+        glActiveTexture(GL_TEXTURE0);
+        skyTexture.bind();
+
+        for(int i = 1; i <= 5; i++) {
+            //calculate a point along the rings
+            float dist = i * 0.2f * 20;
+            float angle = time * i * 5;
+            vec3 pos = vec3(dist * cos(radians(angle)), 0.0f, dist * sin(radians(angle)));
+            mat4 rotMat = glm::rotate(mat4(1), radians(30.0f), vec3(1, 0, 0));
+            pos = rotMat * vec4(pos, 1.0f);
+
+            //draw "worlds"
+            skyShader.setMat4("model", Object::translate(pos.x, pos.y, pos.z));
+            world1Mesh.draw();
+        }
 
 
         //Camera movement (press 'P' to record a position/rotation)
@@ -179,7 +206,7 @@ int main() {
         textRenderingShader.setVec3("textColor", textColor);
 
         //this is almost entirely unnecessary but I thought it was cool lol (makes text fade to a different scale based on how close your cursor is)
-        float x = 80.0f, y = 30.0f, scale = 1.0f, scaleHover = 1.25f, hoverDist = 50.0f;
+        float x = 80.0f, y = 30.0f, scale = 1.0f, scaleHover = 1.25f, hoverDist = 25.0f;
         float width = textRendering.getWidth("Mario Galaxy Map", scale);
         float height = textRendering.getHeight(scale);
         if(mousePos.x >= x - hoverDist && mousePos.y >= y - hoverDist && mousePos.x < x + hoverDist + width && mousePos.y < y + hoverDist + height) {
@@ -225,7 +252,7 @@ int main() {
         }
         textRendering.RenderText(textRenderingShader, "Mario Galaxy Map", x, y, scale, textColor);
 
-        if(!camera.lock) {
+        if(!camera.lock && camera.disable) {
             glBindVertexArray(*Texture2d::getVAO());
             hudElementShader.use();
             hudElementShader.setMat4("projection", textProjection);

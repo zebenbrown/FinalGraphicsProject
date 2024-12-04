@@ -41,12 +41,14 @@ void Camera::update(GLFWwindow* window, float deltaTime) {
     float speedMult = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) ? 25.0f : glfwGetKey(window, GLFW_KEY_LEFT_ALT) ? 1.0f : 10.0f;
     //if(glfwGetKey(window, GLFW_KEY_W)) position += deltaTime * speedMult * forward;
     //if(glfwGetKey(window, GLFW_KEY_S)) position -= deltaTime * speedMult * forward;
-    if(glfwGetKey(window, GLFW_KEY_W)) pos += deltaTime * speedMult * normalize(cross(up, cross(forward, up)));
-    if(glfwGetKey(window, GLFW_KEY_S)) pos -= deltaTime * speedMult * normalize(cross(up, cross(forward, up)));
-    if(glfwGetKey(window, GLFW_KEY_D)) pos += deltaTime * speedMult * normalize(cross(forward, up));
-    if(glfwGetKey(window, GLFW_KEY_A)) pos -= deltaTime * speedMult * normalize(cross(forward, up));
-    if(glfwGetKey(window, GLFW_KEY_Q) || glfwGetKey(window, GLFW_KEY_LEFT_CONTROL)) pos -= deltaTime * speedMult * up;
-    if(glfwGetKey(window, GLFW_KEY_E) || glfwGetKey(window, GLFW_KEY_SPACE)) pos += deltaTime * speedMult * up;
+    if(!disable) {
+        if(glfwGetKey(window, GLFW_KEY_W)) pos += deltaTime * speedMult * normalize(cross(up, cross(forward, up)));
+        if(glfwGetKey(window, GLFW_KEY_S)) pos -= deltaTime * speedMult * normalize(cross(up, cross(forward, up)));
+        if(glfwGetKey(window, GLFW_KEY_D)) pos += deltaTime * speedMult * normalize(cross(forward, up));
+        if(glfwGetKey(window, GLFW_KEY_A)) pos -= deltaTime * speedMult * normalize(cross(forward, up));
+        if(glfwGetKey(window, GLFW_KEY_Q) || glfwGetKey(window, GLFW_KEY_LEFT_CONTROL)) pos -= deltaTime * speedMult * up;
+        if(glfwGetKey(window, GLFW_KEY_E) || glfwGetKey(window, GLFW_KEY_SPACE)) pos += deltaTime * speedMult * up;
+    }
 
     float n = 0.1f;
     float f = 1000.0f;
