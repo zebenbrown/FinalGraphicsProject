@@ -172,3 +172,8 @@ unsigned int *cobb::Texture2d::getVBO() {
 
     return &VBO;
 }
+
+cobb::Texture2d::Texture2d()
+{
+
+}

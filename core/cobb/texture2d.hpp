@@ -36,6 +36,7 @@ namespace cobb {
     public:
         //unsigned int VBO, EBO;
         float vertices[36];
+        Texture2d();
         Texture2d(const string &path);
         Texture2d(const string &path, float positions[8]);
         Texture2d(const string &path, int filterMode, int wrapMode, float positions[8]);

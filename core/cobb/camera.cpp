@@ -26,7 +26,7 @@ Camera::Camera(vec3 position, vec3 lookingAt, float fov, vec2 screenDims) {
 }
 
 void Camera::update(GLFWwindow* window, float deltaTime) {
-    if(lock) return;
+
     //angle
     vec3 dir;
     dir.x = cos(radians(rot.z)) * cos(radians(rot.y));
@@ -41,7 +41,7 @@ void Camera::update(GLFWwindow* window, float deltaTime) {
     float speedMult = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) ? 25.0f : glfwGetKey(window, GLFW_KEY_LEFT_ALT) ? 1.0f : 10.0f;
     //if(glfwGetKey(window, GLFW_KEY_W)) position += deltaTime * speedMult * forward;
     //if(glfwGetKey(window, GLFW_KEY_S)) position -= deltaTime * speedMult * forward;
-    if(!disable) {
+    if(!disable && !lock) {
         if(glfwGetKey(window, GLFW_KEY_W)) pos += deltaTime * speedMult * normalize(cross(up, cross(forward, up)));
         if(glfwGetKey(window, GLFW_KEY_S)) pos -= deltaTime * speedMult * normalize(cross(up, cross(forward, up)));
         if(glfwGetKey(window, GLFW_KEY_D)) pos += deltaTime * speedMult * normalize(cross(forward, up));

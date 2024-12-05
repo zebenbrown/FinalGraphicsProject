@@ -1,5 +1,5 @@
-#include <stdio.h>
-#include <math.h>
+#include <cstdio>
+#include <cmath>
 
 #include "cobb/window.hpp"
 
@@ -16,10 +16,6 @@
 #include "cobb/texture2d.hpp"
 #include "cobb/TorusGen.h"
 #include "cobb/textRendering.h"
-#include "cobb/spriteRendering.h"
-
-const int SCREEN_WIDTH = 1080;
-const int SCREEN_HEIGHT = 720;
 
 using namespace cobb;
 using namespace std;
@@ -51,9 +47,8 @@ void drawAxisGizmo() {
 	}
 }
 
-float startTime = -1.0f;
-auto startPosRot = Camera::loadString("[0, 0, 0, 0, 0, 0]");
-auto endPosRot = Camera::loadString("[0, 0, 0, 0, 0, 0]");
+
+
 vec2 mousePos = vec2(0);
 
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
@@ -69,8 +64,6 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 			}
 		} else if(key == GLFW_KEY_P) {
             cout << camera.getString() << endl;
-        } else if(key == GLFW_KEY_L) {
-            startTime = static_cast<float>(glfwGetTime());
         }
 	}
 }
@@ -82,7 +75,7 @@ void mouse_position_callback(GLFWwindow *window, double xpos, double ypos) {
 }
 
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
-	camera.handleScroll(yoffset);
+	//camera.handleScroll(yoffset);
 }
 
 int main() {
@@ -91,44 +84,83 @@ int main() {
 	glfwSetKeyCallback(window.window, key_callback);
 	glfwSetCursorPosCallback(window.window, mouse_position_callback);
 	glfwSetScrollCallback(window.window, scroll_callback);
-	camera = Camera(vec3(0.5f, 12.0f, 31.3f), vec3(0, 0, -450.0f), 60.0f, vec2(Window::SCREEN_WIDTH, Window::SCREEN_HEIGHT));
-    camera.setPosRot(Camera::loadString("[-19.075241, 9.822771, 25.880850, 0.000000, -23.500034, -416.899048]"));
+    Line::loadShader();
+	camera = Camera(vec3(), vec3(), 60.0f, vec2(Window::SCREEN_WIDTH, Window::SCREEN_HEIGHT));
+    //disables axis gizmo
+    camera.ui = false;
+
+
+    //the 'default' position/rotation of the camera when no world is selected
+    pair defaultCameraPosRot = Camera::loadString("[-19.075241, 9.822771, 25.880850, 0.000000, -23.500034, -416.899048]");
+    camera.setPosRot(defaultCameraPosRot);
+    //the camera angle when a world IS selected
+    vec3 worldLookingAtRotation = vec3(0.000000f, -12.499994f, -377.298370f);
+
+
+    int selectedWorld = 0;
+    int lastWorld = selectedWorld;
+    //when this is NOT -1.0f, a camera transition is happening
+    float cameraTransitionStartTime = -1.0f;
+
+    //sets the selectedWorld and updates other things to handle camera transitions
+    auto setWorld = [&lastWorld, &selectedWorld, &window, &cameraTransitionStartTime](int world) {
+        lastWorld = selectedWorld;
+        selectedWorld = world;
+        cameraTransitionStartTime = window.getTime();
+    };
+
     //set this to false if you want regular camera WASD flight
     camera.disable = true;
-	Line::loadShader();
 
+
+    //shader loading
     Shader torusShader = Shader("assets/torus");
-    Shader textRenderingShader = Shader("assets/textRendering");
-    TorusGen torus = TorusGen(0.01f, 1.0f, 200, 200);
 
+    Shader textRenderingShader = Shader("assets/textRendering");
     textRendering textRendering;
     textRendering.loadText("assets/super-mario-256.ttf");
 
     Shader hudElementShader = Shader("assets/hudElement");
     hudElementShader.use();
-    SpriteRenderer spriteRenderer = SpriteRenderer(hudElementShader);
-    hudElementShader.setInt("tex", 0);
+
+	Shader sphereShader = Shader("assets/sphere");
+	sphereShader.use();
+	sphereShader.setInt("sphereMapTex", 0);
+
     Texture2d wiiPointer = Texture2d("assets/wii-pointer.png");
-
-
-	Shader skyShader = Shader("assets/sphere");
-	skyShader.use();
-	skyShader.setInt("sphereMapTex", 0);
 	Texture2d skyTexture = Texture2d("assets/skysphere.png");
 
+    struct World {
+        Texture2d texture;
+        string name;
+        float speed = 1.0f;
+    };
+
+    World worlds[5];
+    //loads all 5 world textures
+    for(int i = 1; i <= 5; i++) worlds[i - 1].texture = Texture2d("assets/planets/Planet"+to_string(i)+".png");
+    //set some misc data about each world
+    worlds[0].name = "Miralton";
+    worlds[0].speed = 1.3445f;
+    worlds[1].name = "Drek";
+    worlds[1].speed = 2.3482f;
+    worlds[2].name = "Wave World";
+    worlds[2].speed = 0.6485f;
+    worlds[3].name = "Pumplanet";
+    worlds[3].speed = 0.9348f;
+    worlds[4].name = "Iridon";
+    worlds[4].speed = 1.8494f;
+
+    //generate sphere for worlds and sky
 	MeshData sphereMeshData;
 	createSphere(1.0f, 1024, &sphereMeshData);
 	auto sphereMesh = ProceduralMesh(sphereMeshData);
 
-    MeshData world1;
-    createSphere(1.0f, 1024, &world1);
-    auto world1Mesh = ProceduralMesh(world1);
+    //generate torus for rings
+    TorusGen torus = TorusGen(0.01f, 1.0f, 200, 200);
 
-	mat4 model = Object::scale(100, 100, 100);
-
-    //set start/end position/rotation here
-    startPosRot = Camera::loadString("[0.025197, 12.000000, 34.181889, 0.000000, -19.500004, -440.999451]");
-    endPosRot = Camera::loadString("[-24.538515, 29.393368, -15.470002, 0.000000, -43.699879, -340.496185]");
+    //orthographic projection for HUD elements (text, wii pointer)
+    mat4 hudProjection = ortho(0.0f, static_cast<float>(Window::SCREEN_WIDTH), 0.0f, static_cast<float>(Window::SCREEN_HEIGHT), -1.0f, 1.0f);
 
 	//Render loop
 	while (!glfwWindowShouldClose(window.window)) {
@@ -140,135 +172,189 @@ int main() {
 
 
         //skybox/spheremap
-        skyShader.use();
+        sphereShader.use();
         glActiveTexture(GL_TEXTURE0);
         skyTexture.bind();
-        skyShader.setMat4("viewProj", viewProj);
-        skyShader.setMat4("model", model);
+        sphereShader.setMat4("viewProj", viewProj);
+        sphereShader.setMat4("model", Object::scale(100, 100, 100));
         sphereMesh.draw();
 
 
-        //rings
-        mat4 torusModel = model; //scale of 100
+        //rings setup
+        float ringAngle = 30.0f;
+        mat4 torusModel = Object::scale(20, 20, 20);
         torusShader.use();
-        torusModel = glm::rotate(torusModel, radians(120.0f), vec3(1.0f, 0.0f, 0.0f));
-        torusModel = scale(torusModel, vec3(0.2f)); //scales down to 20
+        torusModel = glm::rotate(torusModel, radians(90.0f + ringAngle), vec3(1, 0, 0));
 
         torusShader.setMat4("modelMatrix", torusModel);
         torusShader.setMat4("view", viewProj);
 
-        for (int i = 5; i > 0; --i)
+        //draw rings
+        for (int i = 1; i <= 5; i++)
         {
             torusShader.setVec3("offset", vec3(i - (i * 0.8f)));
             torus.draw();
         }
 
 
-        skyShader.use();
-        glActiveTexture(GL_TEXTURE0);
-        skyTexture.bind();
 
+        //0 = no world is being hovered, otherwise its set to the world that IS being hovered (used for world name text)
+        int hoveredWorld = 0;
+        vec3 worldPositions[5];
+        sphereShader.use();
         for(int i = 1; i <= 5; i++) {
             //calculate a point along the rings
             float dist = i * 0.2f * 20;
-            float angle = time * i * 5;
+            //how fast they go around the rings
+            float angle = (time + 88.0f) * worlds[i - 1].speed;
+            //calculate point on flat rings
             vec3 pos = vec3(dist * cos(radians(angle)), 0.0f, dist * sin(radians(angle)));
-            mat4 rotMat = glm::rotate(mat4(1), radians(30.0f), vec3(1, 0, 0));
+            //rotate it up
+            mat4 rotMat = glm::rotate(mat4(1), radians(ringAngle), vec3(1, 0, 0));
             pos = rotMat * vec4(pos, 1.0f);
+            //save world positions for later
+            worldPositions[i - 1] = pos;
+            mat4 m = Object::translate(pos.x, pos.y, pos.z);
+
+
+            //
+            //check if you're hovering over the spheres
+            //
+            //hover dist is how many pixels away will it START scaling
+            //maxScaleDist is how many pixels away it will STOP scaling and be at hoverScale (hover size)
+            //scale is default size
+            float hoverDist = 40, maxScaleDist = 25, scale = 1.5f, hoverScale = 1.75f;
+            if(selectedWorld == 0 && cameraTransitionStartTime == -1.0f) { //make sure camera is in default position AND its not currently transitioning
+
+                //ChatGPT helped with the concept of this section but I (Drew) wrote the code myself
+
+                //get sphere screen coordinates
+
+                mat4 mvp = viewProj * m;
+                //transform the sphere's center to clip space
+                //Note: I do not know why I needed the '0.1f / i' but it makes it work soooo
+                vec4 clipSpace = mvp * vec4(pos * (0.1f / static_cast<float>(i)), 1.0f);
+                //perspective division to get normal device coordinates (-1 to 1 range)
+                vec3 ndc = vec3(clipSpace.x / clipSpace.w, clipSpace.y / clipSpace.w, clipSpace.z / clipSpace.w);
+                //convert normal device coordinates to screen coordinates
+                vec2 screenCoords = vec2((1.0f + ndc.x) * 0.5f * Window::SCREEN_WIDTH, (1.0f - ndc.y) * 0.5f * Window::SCREEN_HEIGHT);
+                //distance from mouse to sphere
+                float d = glm::length(mousePos - screenCoords);
+                if(d <= hoverDist) {
+                    //set the hovered world for the world worldName text
+                    hoveredWorld = i;
+
+                    //Select a world
+                    if(glfwGetMouseButton(window.window, GLFW_MOUSE_BUTTON_LEFT)) {
+                        setWorld(i);
+                    }
+                    if(d > maxScaleDist && d <= hoverDist) {
+                        //linear interp between hoverDist and maxScaleDist
+                        float t = (hoverDist - d) / (hoverDist - maxScaleDist);
+                        float s = scale + t * (hoverScale - scale);
+                        //apply partial scaling (based on mouse distance from world)
+                        m*=Object::scale(s, s, s);
+                    } else { //apply full scaling
+                        m*=Object::scale(hoverScale, hoverScale, hoverScale);
+                    }
+                } else { //apply default scaling
+                    m*=Object::scale(scale, scale, scale);
+                }
+            } else { //apply default scaling
+                m*=Object::scale(scale, scale, scale);
+            }
 
             //draw "worlds"
-            skyShader.setMat4("model", Object::translate(pos.x, pos.y, pos.z));
-            world1Mesh.draw();
+            worlds[i-1].texture.bind();
+            sphereShader.setMat4("model", m);
+            sphereMesh.draw();
         }
 
-
-        //Camera movement (press 'P' to record a position/rotation)
-        //Copy paste the string into the one using the "Camera::loadString()" function to set a position/rotation
-        //Press 'L' to activate the camera movement
-        // duration is how fast the camera will move
-        if(startTime != -1.0f) {
-            float duration = 1.0f;
-            camera.lerpCamera(startTime, time, duration, startPosRot, endPosRot);
-            if(time - startTime > duration) {
-                startTime = -1.0f;
+        //Camera handler (when a world is selected)
+        if(camera.disable && selectedWorld != 0) { //default camera angle
+            if(cameraTransitionStartTime == -1.0f) { //if camera transition is NOT active
+                camera.pos = worldPositions[selectedWorld - 1];
+                camera.pos.x-=5;
+                camera.pos.y+=1.5f;
+                camera.pos.z+=2;
+                camera.rot = worldLookingAtRotation;
+            }
+            //Unselect a world
+            if(cameraTransitionStartTime == -1.0f && glfwGetMouseButton(window.window, GLFW_MOUSE_BUTTON_RIGHT)) {
+                setWorld(0);
             }
         }
 
-
-		drawAxisGizmo();
-
-        glDisable(GL_DEPTH_TEST);
-        mat4 textProjection = ortho(0.0f, static_cast<float>(Window::SCREEN_WIDTH), 0.0f, static_cast<float>(Window::SCREEN_HEIGHT), -1.0f, 1.0f);
-        textRenderingShader.use();
-        textRenderingShader.setMat4("projection", textProjection);
-        
-        vec3 textColor = vec3(1, 0, 0);
-        textRenderingShader.setVec3("textColor", textColor);
-
-        //this is almost entirely unnecessary but I thought it was cool lol (makes text fade to a different scale based on how close your cursor is)
-        float x = 80.0f, y = 30.0f, scale = 1.0f, scaleHover = 1.25f, hoverDist = 25.0f;
-        float width = textRendering.getWidth("Mario Galaxy Map", scale);
-        float height = textRendering.getHeight(scale);
-        if(mousePos.x >= x - hoverDist && mousePos.y >= y - hoverDist && mousePos.x < x + hoverDist + width && mousePos.y < y + hoverDist + height) {
-            //if its entirely inside the text area (aka no need for calculating how far from the text are it is)
-            if(mousePos.x >= x && mousePos.y >= y && mousePos.x < x + width && mousePos.y < y + height) {
-                float offsetMult = (scaleHover - scale) * 0.5f;
-                scale = scaleHover;
-                x -= width * offsetMult;
-                y += height * offsetMult;
+        //function to set the start position/rotation and the end position/rotation of the camera transition
+        auto setPosRot = [&worldLookingAtRotation, &worldPositions, &defaultCameraPosRot](int world, vec3 &pos, vec3 &rot) {
+            if(world == 0) {
+                pos = defaultCameraPosRot.first;
+                rot = defaultCameraPosRot.second;
             } else {
-                float dist = hoverDist;
-                //these 4 if statements calculate how far the cursor is from the closest edge
-                if(mousePos.x < x) {
-                    float temp = x - mousePos.x;
-                    if(temp < dist) dist = temp;
-                }
-                if(mousePos.x >= x + width) {
-                    float temp = mousePos.x - (x + width);
-                    if(temp < dist) dist = temp;
-                }
-                if(mousePos.y < y) {
-                    float temp = y - mousePos.y;
-                    if(temp < dist) dist = temp;
-                }
-                if(mousePos.y >= y + height) {
-                    float temp = mousePos.y - (y + height);
-                    if(temp < dist) dist = temp;
-                }
-
-                //invert it
-                dist = hoverDist - dist;
-                //scale down to 0-1 range
-                dist /= hoverDist;
-                //lerp between the two scales
-                float lerpScale = (scale * (1.0f - dist)) + (scaleHover * dist);
-                //calculate how much to shift xy by so it remains centered at same point
-                float offsetMult = (lerpScale - scale) * 0.5f;
-                scale = lerpScale;
-                x -= width * offsetMult;
-                y += height * offsetMult;
+                pos = worldPositions[world - 1];
+                pos.x-=5;
+                pos.y+=1.5f;
+                pos.z+=2;
+                rot = worldLookingAtRotation;
             }
+        };
 
+        //Camera transition handler
+        if(cameraTransitionStartTime != -1.0f) { //check if there is an active camera transition
+            float duration = 1.0f;
+            vec3 startPos, startRot, endPos, endRot;
+
+            //set the position/rotation of the start/end points of the camera transition
+            setPosRot(lastWorld, startPos, startRot);
+            setPosRot(selectedWorld, endPos, endRot);
+
+            //basic lerp function but put inside the camera
+            camera.lerpCamera(cameraTransitionStartTime, time, duration, pair(startPos, startRot), pair(endPos, endRot));
+            if(time - cameraTransitionStartTime > duration) {
+                cameraTransitionStartTime = -1.0f; //set camera transition to be over/unstarted before the next one
+            }
         }
-        textRendering.RenderText(textRenderingShader, "Mario Galaxy Map", x, y, scale, textColor);
 
+
+        //HUD START
+        glDisable(GL_DEPTH_TEST);
+
+        //Screen Text
+        textRenderingShader.use();
+        textRenderingShader.setMat4("projection", hudProjection);
+
+        string worldName;
+        if(hoveredWorld == 0) {
+            worldName = selectedWorld == 0 ? "Mario Galaxy Map" : worlds[selectedWorld - 1].name;
+        } else {
+            worldName = worlds[hoveredWorld - 1].name;
+        }
+
+        //drop shadow for the text
+        vec3 textColor = vec3(1, 1, 1);
+        textRenderingShader.setVec3("textColor", textColor);
+        textRendering.RenderText(textRenderingShader, worldName, 28.0f, 28.0f, 1.0f, textColor);
+        //the actual text
+        textColor = vec3(0.2f, 0.5f, 1);
+        textRenderingShader.setVec3("textColor", textColor);
+        textRendering.RenderText(textRenderingShader, worldName, 30.0f, 30.0f, 1.0f, textColor);
+
+        //Wii pointer
         if(!camera.lock && camera.disable) {
             glBindVertexArray(*Texture2d::getVAO());
             hudElementShader.use();
-            hudElementShader.setMat4("projection", textProjection);
+            hudElementShader.setMat4("projection", hudProjection);
             float pointerScale = 0.1f;
-            hudElementShader.setMat4("model", Object::translate(mousePos.x + wiiPointer.getWidth() * pointerScale * 0.5f, Window::SCREEN_HEIGHT - mousePos.y - wiiPointer.getHeight() * pointerScale, 0) * Object::scale(wiiPointer.getWidth() * pointerScale, wiiPointer.getHeight() * pointerScale, 1));
-            glActiveTexture(GL_TEXTURE0);
+            hudElementShader.setMat4("model", Object::translate(mousePos.x + wiiPointer.getWidth() * pointerScale * 0.5f, Window::SCREEN_HEIGHT - mousePos.y - wiiPointer.getHeight() * pointerScale, 0)
+                    * Object::scale(wiiPointer.getWidth() * pointerScale, wiiPointer.getHeight() * pointerScale, 1));
             wiiPointer.bind();
             wiiPointer.draw();
         }
 
+        drawAxisGizmo();
+
         glEnable(GL_DEPTH_TEST);
-        //hudElementShader.setMat4("projection", textProjection);
-        //spriteRenderer.DrawSprite(wiiPointer, vec2(200), vec2(300, 400), 45, vec3(0, 1, 0));
-
-
-
+        //HUD END
 
 
 		glfwSwapBuffers(window.window);
