@@ -9,6 +9,7 @@
 
 namespace cobb {
     void createSphere(float radius, int subDivisions, MeshData* meshData);
+    void createAsteroid(float radius, float variability, int subDivisions, MeshData* meshData);
 }
 
 

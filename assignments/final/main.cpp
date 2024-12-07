@@ -89,6 +89,8 @@ int main() {
     //disables axis gizmo
     camera.ui = false;
 
+    //glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+
 
     //the 'default' position/rotation of the camera when no world is selected
     pair defaultCameraPosRot = Camera::loadString("[-19.075241, 9.822771, 25.880850, 0.000000, -23.500034, -416.899048]");
@@ -129,6 +131,7 @@ int main() {
 
     Texture2d wiiPointer = Texture2d("assets/wii-pointer.png");
 	Texture2d skyTexture = Texture2d("assets/skysphere.png");
+    Texture2d asteroidTexture = Texture2d("assets/asteroid.png");
 
     struct World {
         Texture2d texture;
@@ -153,8 +156,26 @@ int main() {
 
     //generate sphere for worlds and sky
 	MeshData sphereMeshData;
-	createSphere(1.0f, 1024, &sphereMeshData);
+	createSphere(1, 1024, &sphereMeshData);
 	auto sphereMesh = ProceduralMesh(sphereMeshData);
+
+    struct Asteroid {
+        float angle = 0.0f; //degrees
+        float dist = 150.0f;
+        float ringShift = 0.0f; //how many degrees off the normal asteroid ring it is
+        MeshData meshData;
+        ProceduralMesh mesh;
+    };
+
+    const int ASTEROID_COUNT = 1000;
+    Asteroid asteroids[ASTEROID_COUNT];
+    for(auto & asteroid : asteroids) {
+        createAsteroid(RandomRange(0.01f, 0.2f), 0.25f, (int) (RandomRange(10, 16)), &asteroid.meshData);
+        asteroid.mesh = ProceduralMesh(asteroid.meshData);
+        asteroid.angle = RandomRange(0, 360.0f);
+        asteroid.ringShift = RandomRange(-5.0f, 5.0f);
+        asteroid.dist = RandomRange(12, 25);
+    }
 
     //generate torus for rings
     TorusGen torus = TorusGen(0.01f, 1.0f, 200, 200);
@@ -268,6 +289,15 @@ int main() {
             worlds[i-1].texture.bind();
             sphereShader.setMat4("model", m);
             sphereMesh.draw();
+        }
+
+        //draw asteroid ring
+        asteroidTexture.bind();
+        float asteroidRingAngle = 20.0f;
+        for(auto & asteroid : asteroids) {
+            vec3 pos = vec3(cos(radians(asteroid.angle + time)), 0, sin(radians(asteroid.angle + time))) * asteroid.dist;
+            sphereShader.setMat4("model", Object::rotate(0, radians(-asteroidRingAngle + asteroid.ringShift), 0) * Object::translate(pos.x, pos.y, pos.z));
+            asteroid.mesh.draw();
         }
 
         //Camera handler (when a world is selected)
