@@ -1,8 +1,10 @@
-# gpr200-templates
-Project templates for GPR-200 (Intro to Graphics Programming)
+### Collaboration Note
+This project was a collaborative effore for my Intro to Modern Graphics Programming class at Champlain College. I have forked the originial repository yo showcase my individual contributuions.
 
-Setup Instructions:
-1. Install CMake https://cmake.org/download/
-2. Fork this repository
-3. Install Visual Studio CMake tools https://learn.microsoft.com/en-us/cpp/build/cmake-projects-in-visual-studio?view=msvc-170
-4. In Visual Studio, File -> Open -> CMake... and select CMakeLists.txt
+ - Original Repository: https://github.com/AndrewGenualdo/ItMG-Final
+ - Team Member: github.com/AndrewGenualdo
+
+### My Key Contributions:
+- Created the foundational rendering system, we merged projects for the final project and used Andrew's, this was my original project (https://github.com/zebenbrown/gpr200-fa2024-zeben-brown)
+- Implemented the math to simulate the planetary rings around the planetary system
+- Developed the text rendering system to display the relevant information to the screen
