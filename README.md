@@ -8,3 +8,8 @@ This project was a collaborative effore for my Intro to Modern Graphics Programm
 - Created the foundational rendering system, we merged projects for the final project and used Andrew's, this was my original project (https://github.com/zebenbrown/gpr200-fa2024-zeben-brown)
 - Implemented the math to simulate the planetary rings around the planetary system
 - Developed the text rendering system to display the relevant information to the screen
+
+
+### Demo
+
+![Gameplay_Demo](https://github.com/zebenbrown/FinalGraphicsProject/blob/main/demo/GraphicsFinalDemo.gif)
